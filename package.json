@@ -1,0 +1,17 @@
+{
+  "name": "@data-fair/tool-ai-sandbox",
+  "version": "0.0.1",
+  "description": "Run Claude Code and OpenCode in a Podman-based sandbox",
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "bin": {
+    "df-ai-sandbox": "./bin/cli.js"
+  },
+  "files": [
+    "bin/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/data-fair/tool-ai-sandbox.git"
+  }
+}

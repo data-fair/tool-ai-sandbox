@@ -8,7 +8,8 @@
     "df-ai-sandbox": "./bin/cli.js"
   },
   "files": [
-    "bin/"
+    "bin/",
+    "sandbox/"
   ],
   "repository": {
     "type": "git",

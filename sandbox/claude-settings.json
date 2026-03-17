@@ -12,6 +12,6 @@
     "deny": []
   },
   "sandbox": {
-    "enabled": false
+    "enabled": true
   }
 }

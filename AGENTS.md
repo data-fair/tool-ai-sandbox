@@ -16,4 +16,4 @@ This is a Podman-based sandbox for running AI coding tools (Claude Code, OpenCod
 - Image version is derived from `package.json` version (they must stay in sync)
 - Security relies on Podman isolation + per-tool permission boundaries
 - `--userns=keep-id` preserves host UID mapping for file ownership
-- SELinux `:Z` labels ensure private volume access
+- SELinux `:z` labels ensure shared volume access

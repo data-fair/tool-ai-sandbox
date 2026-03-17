@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync } from 'node:fs'
-import { homedir } from 'node:os'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { tmpdir, homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
@@ -59,18 +59,45 @@ for (const v of envVarsToForward) {
   }
 }
 
+// For opencode: merge project opencode.json with sandbox permissions on the host side
+const sandboxSettingsDir = join(__dirname, '..', 'sandbox')
+let mergedOpencodePath = null
+if (command === 'opencode') {
+  const projectConfig = join(process.cwd(), 'opencode.json')
+  const sandboxConfig = JSON.parse(readFileSync(join(sandboxSettingsDir, 'opencode-settings.json'), 'utf8'))
+  const base = existsSync(projectConfig) ? JSON.parse(readFileSync(projectConfig, 'utf8')) : {}
+  const merged = deepMerge(base, sandboxConfig)
+  mergedOpencodePath = join(tmpdir(), `opencode-sandbox-${process.pid}.json`)
+  writeFileSync(mergedOpencodePath, JSON.stringify(merged, null, 2))
+}
+
 // Bind mounts
-const mounts = [
-  [process.cwd(), '/workspace', 'Z'],
+const commonMounts = [
+  [process.cwd(), '/workspace', 'z'],
   [`${home}/.gitconfig`, '/home/node/.gitconfig', 'ro'],
-  [`${home}/.claude`, '/home/node/.claude', 'Z'],
-  [`${home}/.claude.json`, '/home/node/.claude.json', 'Z'],
-  [`${home}/.config/opencode`, '/home/node/.config/opencode', 'Z'],
-  [`${home}/.local/share/opencode`, '/home/node/.local/share/opencode', 'Z'],
-  [`${home}/.local/state/opencode`, '/home/node/.local/state/opencode', 'Z'],
-  [`${home}/.cache/opencode`, '/home/node/.cache/opencode', 'Z'],
-  [`${home}/.cache/ms-playwright`, '/home/node/.cache/ms-playwright', 'Z']
+  [`${home}/.cache/ms-playwright`, '/home/node/.cache/ms-playwright', 'z']
 ]
+
+const claudeMounts = [
+  [`${home}/.claude`, '/home/node/.claude', 'z'],
+  [`${home}/.claude.json`, '/home/node/.claude.json', 'z']
+]
+
+const opencodeMounts = [
+  [`${home}/.config/opencode`, '/home/node/.config/opencode', 'z'],
+  [`${home}/.local/share/opencode`, '/home/node/.local/share/opencode', 'z'],
+  [`${home}/.local/state/opencode`, '/home/node/.local/state/opencode', 'z'],
+  [`${home}/.cache/opencode`, '/home/node/.cache/opencode', 'z']
+]
+
+const mounts = [
+  ...commonMounts,
+  ...(command === 'claude' ? claudeMounts : []),
+  ...(command === 'opencode' ? opencodeMounts : [])
+]
+if (mergedOpencodePath) {
+  mounts.push([mergedOpencodePath, '/workspace/opencode.json', 'ro'])
+}
 
 // Ensure host directories exist for bind mounts
 for (const [src, , opts] of mounts) {
@@ -87,4 +114,21 @@ for (const [src, dest, opts] of mounts) {
 
 runArgs.push(IMAGE, command, ...extraArgs)
 
-execFileSync('podman', runArgs, { stdio: 'inherit' })
+try {
+  execFileSync('podman', runArgs, { stdio: 'inherit' })
+} finally {
+  if (mergedOpencodePath) rmSync(mergedOpencodePath, { force: true })
+}
+
+function deepMerge (target, source) {
+  const result = { ...target }
+  for (const key of Object.keys(source)) {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key]) &&
+        result[key] && typeof result[key] === 'object' && !Array.isArray(result[key])) {
+      result[key] = deepMerge(result[key], source[key])
+    } else {
+      result[key] = source[key]
+    }
+  }
+  return result
+}

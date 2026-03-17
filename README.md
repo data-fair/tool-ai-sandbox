@@ -14,10 +14,10 @@ Requires [Podman](https://podman.io/) on the host.
 
 ```bash
 # Run Claude Code in the current directory
-df-ai-sandbox -e ANTHROPIC_API_KEY claude
+df-ai-sandbox claude
 
 # Run OpenCode
-df-ai-sandbox -e OPENROUTER_API_KEY opencode
+df-ai-sandbox opencode
 
 # Open a shell in the sandbox
 df-ai-sandbox shell

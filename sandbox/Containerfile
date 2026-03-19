@@ -15,7 +15,7 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
     && rm -rf /var/lib/apt/lists/*
 
 # Install Claude Code CLI and OpenCode (pinned versions)
-RUN npm install -g @anthropic-ai/claude-code@2.1.77 opencode-ai@1.2.27
+RUN npm install -g @anthropic-ai/claude-code@2.1.79 opencode-ai@1.2.27
 
 # Install Playwright Chromium OS dependencies (browsers installed at runtime from project version)
 RUN npx playwright install-deps chromium

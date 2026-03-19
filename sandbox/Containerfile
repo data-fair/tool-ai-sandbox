@@ -30,6 +30,7 @@ ARG USER_UID=1000
 ARG USER_GID=1000
 RUN groupmod -g ${USER_GID} node && usermod -u ${USER_UID} -g ${USER_GID} node
 RUN mkdir -p /home/node/.claude /home/node/.config/opencode /home/node/.local/share/opencode /home/node/.local/state/opencode /home/node/.cache/opencode && chown -R node:node /home/node
+RUN chown -R node:node /usr/local/lib/node_modules/@anthropic-ai /usr/local/bin/claude
 
 USER node
 WORKDIR /workspace

@@ -10,8 +10,5 @@
       "mcp__*"
     ],
     "deny": []
-  },
-  "sandbox": {
-    "enabled": true
   }
 }

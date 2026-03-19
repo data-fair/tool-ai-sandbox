@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, statSync } from 'node:fs'
 import { tmpdir, homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'))
@@ -97,6 +97,23 @@ const mounts = [
 ]
 if (mergedOpencodePath) {
   mounts.push([mergedOpencodePath, '/workspace/opencode.json', 'ro'])
+}
+
+// If the workspace is a git worktree, mount the main repo's .git directory
+// so that the gitdir reference resolves inside the container
+const dotGitPath = join(process.cwd(), '.git')
+if (existsSync(dotGitPath) && statSync(dotGitPath).isFile()) {
+  const dotGitContent = readFileSync(dotGitPath, 'utf8').trim()
+  const match = dotGitContent.match(/^gitdir:\s*(.+)$/)
+  if (match) {
+    // e.g. gitdir: /home/alban/repo/.git/worktrees/branch-name
+    const gitdir = resolve(process.cwd(), match[1])
+    // The main .git dir is two levels up from the worktree gitdir
+    // /home/alban/repo/.git/worktrees/branch-name -> /home/alban/repo/.git
+    const mainGitDir = resolve(gitdir, '..', '..')
+    // Mount the main .git dir at its original host path so the gitdir reference works
+    mounts.push([mainGitDir, mainGitDir, 'z'])
+  }
 }
 
 // Ensure host directories exist for bind mounts

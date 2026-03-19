@@ -1,6 +1,6 @@
 {
   "name": "@data-fair/tool-ai-sandbox",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Run Claude Code and OpenCode in a Podman-based sandbox",
   "type": "module",
   "license": "AGPL-3.0-only",
